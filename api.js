@@ -1,6 +1,9 @@
 var express = require('express');
 var router = express.Router();
+var User = require('./models/user');
+var Beer = require('./models/beer');
 var jwt = require('jsonwebtoken');
+var config = require('./config');
 
 // route to authenticate API requests.
 router.post('/authenticate', function(req, res){
@@ -12,7 +15,7 @@ router.post('/authenticate', function(req, res){
             if(user.password != req.body.password){
                 res.json({success: false, message: 'Authentication failed. Invalid password.'});
             } else {
-                var token = jwt.sign(user, app.get('superSecret'), {expiresInMinutes: 1440});
+                var token = jwt.sign(user, config.secret, {expiresInMinutes: 1440});
 
                 res.json({success: true, message: 'Enjoy your token.', token: token});
             }
@@ -24,7 +27,7 @@ router.post('/authenticate', function(req, res){
 router.use(function(req, res, next){
     var token = req.body.token || req.query.token || req.headers['x-access-token'];
     if(token) {
-        jwt.verify(token, app.get('superSecret'), function(err, decoded){
+        jwt.verify(token, config.secret, function(err, decoded){
             if(err) return res.json({success: false, message: 'Failed to authenticate token.'});
             req.decoded = decoded;
             next();
